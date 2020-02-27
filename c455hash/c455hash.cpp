@@ -8,13 +8,9 @@
 #include <utility> // std::pair
 #include <stdexcept> // std::runtime_error
 #include <sstream> // std::stringstream
+//#include <math.h>
 using namespace std;
 
-/**
- * Reads csv file into table, exported as a vector of vector of doubles.
- * @param inputFileName input file name (full path).
- * @return data as vector of vector of doubles.
- */
 vector<vector<string> > read_csv(string inputFileName) {
 
     vector<vector<string> > data;
@@ -26,28 +22,13 @@ vector<vector<string> > read_csv(string inputFileName) {
 
     vector<string> row;
 
-    int lines = 0;
-    
-    while (getline(inputFile, line)) {
-        lines++;
-    }
-
-    cout << lines << endl;
-
-    for (size_t i = 0; i < lines; i++)
-    {
-
-    }
-
     while (getline(inputFile, line))    // get next line in file
     {
         row.clear();
         stringstream ss(line);
 
-        //i = 0;
         while (getline(ss, field, ','))  // break line into comma delimitted fields
         {
-            temp += field;
             row.push_back(field);  // add each field to the 1D array
         }
 
@@ -56,6 +37,7 @@ vector<vector<string> > read_csv(string inputFileName) {
 
     return data;
 }
+
 
 void printLine(int line, vector<vector<string> > data) {
     for (int i = 0; i < data[line].size(); i++)
@@ -66,9 +48,24 @@ void printLine(int line, vector<vector<string> > data) {
 }
 
 int createKey(string s1, string s2) {
+    int i1 = stoi(s1);
+    int i2 = stoi(s2);
 
+    return i1 * i2;
+}
 
-    return 1;
+int hashByDivision(int key, int T) {
+    return key % T;
+}
+
+int hashByMultiplication(int key, int T) {
+    float k = (float)key;
+    float t = (float)T;
+    float A = 0.6180339887;
+
+    int result = floor(t * (fmod(k * A, 1)));
+
+    return result;
 }
 
 vector<vector<string> > createHashTable(vector<vector<string> > data) {
@@ -84,8 +81,8 @@ int main() {
     cout << data.size() << "\n";
     cout << data[0].size() << "\n";
     cout << data[0][0].size() << "\n";
-    cout << data[0][9] << endl;
-    //cout << data[1][1];
+    cout << data[0][36] << endl;
+    //cout << data[1][0]; // index out of bounds error
 
     //printLine(0, data);
     //printLine(1, data);
