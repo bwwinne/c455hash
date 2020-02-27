@@ -11,33 +11,46 @@
 //#include <math.h>
 using namespace std;
 
-vector<vector<string> > read_csv(string inputFileName) {
+string** read_csv(string inputFileName) {
 
-    vector<vector<string> > data;
+    //vector<vector<string> > data;
     vector<string> array;
     ifstream inputFile(inputFileName);
+
+    int rows = 3221;
+    int cols = 36;
     
     string line, field;
-    string temp;
+    string** data = 0;
+    data = new string*[rows];
 
-    vector<string> row;
-
-    while (getline(inputFile, line))    // get next line in file
+    for (size_t i = 0; i < rows; i++)
     {
-        row.clear();
+        data[i] = new string[cols];
+        getline(inputFile, line);
         stringstream ss(line);
-
-        while (getline(ss, field, ','))  // break line into comma delimitted fields
+        for (size_t j = 0; j < cols; j++)
         {
-            row.push_back(field);  // add each field to the 1D array
+            getline(ss, field, ',');
+            data[i][j] = field;
         }
-
-        data.push_back(row);  // add the 1D array to the 2D array
     }
+
+    //while (getline(inputFile, line, '\n'))    // get next line in file
+    //{
+    //    row.clear();
+    //    stringstream ss(line);
+
+    //    while (getline(ss, field, ','))  // break line into comma delimitted fields
+    //    {
+    //        row.push_back(field);  // add each field to the 1D array
+    //    }
+
+    //    data.push_back(row);  // add the 1D array to the 2D array
+    //}
 
     return data;
 }
-
 
 void printLine(int line, vector<vector<string> > data) {
     for (int i = 0; i < data[line].size(); i++)
@@ -76,12 +89,21 @@ vector<vector<string> > createHashTable(vector<vector<string> > data) {
 
 int main() {
 
-    vector<vector<string> > data = read_csv("acs2015_county_data.csv");
+    string** data = read_csv("acs2015_county_data.csv");
 
-    cout << data.size() << "\n";
-    cout << data[0].size() << "\n";
+    //cout << data.size() << "\n";
+    //cout << data[0].size() << "\n";
     cout << data[0][0].size() << "\n";
-    cout << data[0][36] << endl;
+    cout << data[0][0] << endl;
+    cout << data[1][0] << endl;
+    for (size_t i = 0; i < 36; i++)
+    {
+        for (size_t j = 0; j < 36; j++)
+        {
+            cout << data[i][j] << " ";
+        }
+        cout << endl;
+    }
     //cout << data[1][0]; // index out of bounds error
 
     //printLine(0, data);
