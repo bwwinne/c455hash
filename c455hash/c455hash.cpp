@@ -8,73 +8,92 @@
 #include <utility> // std::pair
 #include <stdexcept> // std::runtime_error
 #include <sstream> // std::stringstream
+using namespace std;
 
-std::vector<std::pair<std::string, std::vector<int>>> read_csv(std::string filename) {
-    // Reads a CSV file into a vector of <string, vector<int>> pairs where
-    // each pair represents <column name, column values>
+/**
+ * Reads csv file into table, exported as a vector of vector of doubles.
+ * @param inputFileName input file name (full path).
+ * @return data as vector of vector of doubles.
+ */
+vector<vector<string> > read_csv(string inputFileName) {
 
-    // Create a vector of <string, int vector> pairs to store the result
-    std::vector<std::pair<std::string, std::vector<int>>> result;
+    vector<vector<string> > data;
+    vector<string> array;
+    ifstream inputFile(inputFileName);
+    
+    string line, field;
+    string temp;
 
-    // Create an input filestream
-    std::ifstream myFile(filename);
+    vector<string> row;
 
-    // Make sure the file is open
-    if (!myFile.is_open()) throw std::runtime_error("Could not open file");
-
-    // Helper vars
-    std::string line, colname;
-    int val;
-
-    // Read the column names
-    if (myFile.good())
-    {
-        // Extract the first line in the file
-        std::getline(myFile, line);
-
-        // Create a stringstream from line
-        std::stringstream ss(line);
-
-        // Extract each column name
-        while (std::getline(ss, colname, ',')) {
-
-            // Initialize and add <colname, int vector> pairs to result
-            result.push_back({ colname, std::vector<int> {} });
-        }
+    int lines = 0;
+    
+    while (getline(inputFile, line)) {
+        lines++;
     }
 
-    // Read data, line by line
-    while (std::getline(myFile, line))
+    cout << lines << endl;
+
+    for (size_t i = 0; i < lines; i++)
     {
-        // Create a stringstream of the current line
-        std::stringstream ss(line);
 
-        // Keep track of the current column index
-        int colIdx = 0;
-
-        // Extract each integer
-        while (ss >> val) {
-
-            // Add the current integer to the 'colIdx' column's values vector
-            result.at(colIdx).second.push_back(val);
-
-            // If the next token is a comma, ignore it and move on
-            if (ss.peek() == ',') ss.ignore();
-
-            // Increment the column index
-            colIdx++;
-        }
     }
 
-    // Close file
-    myFile.close();
+    while (getline(inputFile, line))    // get next line in file
+    {
+        row.clear();
+        stringstream ss(line);
 
-    return result;
+        //i = 0;
+        while (getline(ss, field, ','))  // break line into comma delimitted fields
+        {
+            temp += field;
+            row.push_back(field);  // add each field to the 1D array
+        }
+
+        data.push_back(row);  // add the 1D array to the 2D array
+    }
+
+    return data;
+}
+
+void printLine(int line, vector<vector<string> > data) {
+    for (int i = 0; i < data[line].size(); i++)
+    {
+        cout << data[line][i] << " ";
+    }
+    cout << "\n";
+}
+
+int createKey(string s1, string s2) {
+
+
+    return 1;
+}
+
+vector<vector<string> > createHashTable(vector<vector<string> > data) {
+    data.erase(data.begin()); // delete header row
+
+    return data;
 }
 
 int main() {
-    // Read 
-    std::vector<std::pair<std::string, std::vector<int>>> data = read_csv("acs2015_county_data.csv");
+
+    vector<vector<string> > data = read_csv("acs2015_county_data.csv");
+
+    cout << data.size() << "\n";
+    cout << data[0].size() << "\n";
+    cout << data[0][0].size() << "\n";
+    cout << data[0][9] << endl;
+    //cout << data[1][1];
+
+    //printLine(0, data);
+    //printLine(1, data);
+
+    //data = createHashTable(data);
+    //cout << data.at(0).size() << "\n";
+    //printLine(0, data);
+    //printLine(1, data);
 
     return 0;
 }
