@@ -1,15 +1,30 @@
-// c455hash.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
+// Bryce Winnecke C455 Homework 3
 
 #include <iostream>
 #include <string>
 #include <fstream>
 #include <vector>
-#include <utility> // std::pair
-#include <stdexcept> // std::runtime_error
-#include <sstream> // std::stringstream
-//#include <math.h>
+#include <utility> 
+#include <stdexcept> 
+#include <sstream> 
 using namespace std;
+
+long createKey(string s1, string s2) {
+    long i1 = 0;
+    long i2 = 0;
+
+    for (size_t i = 0; s1[i] != '\0'; i++)
+    {
+        i1 += s1[i];
+    }
+
+    for (size_t i = 0; s2[i] != '\0'; i++)
+    {
+        i2 += s2[i];
+    }
+
+    return i1 * i2;
+}
 
 vector<vector<string> > read_csv(string inputFileName) {
 
@@ -22,15 +37,30 @@ vector<vector<string> > read_csv(string inputFileName) {
 
     vector<string> row;
 
+    getline(inputFile, line); // clear header row
+
     while (getline(inputFile, line))    // get next line in file
     {
         row.clear();
         stringstream ss(line);
 
+        int i = 0;
+        string temp1;
+        string temp2;
         while (getline(ss, field, ','))  // break line into comma delimitted fields
         {
+            // use second and third columns to create key (state and county)
+            if (i == 1) {
+                temp1 = field;
+            }
+            else if (i == 2) {
+                temp2 = field;
+            }
+            i++;
             row.push_back(field);  // add each field to the 1D array
         }
+        long key = createKey(temp1, temp2);
+        row.push_back(to_string(key)); // push key to position 37 of each row
 
         data.push_back(row);  // add the 1D array to the 2D array
     }
@@ -38,70 +68,137 @@ vector<vector<string> > read_csv(string inputFileName) {
     return data;
 }
 
+float loadFactor(vector<vector<string> > hashTable) {
+    int T = hashTable.size();
+    int keysStored = 0;
 
-void printLine(int line, vector<vector<string> > data) {
-    for (int i = 0; i < data[line].size(); i++)
+    for (size_t i = 0; i < T; i++)
     {
-        cout << data[line][i] << " ";
+        if (!hashTable[i].empty()) {
+            keysStored++;
+        }
     }
-    cout << "\n";
+    cout << "Elements stored in hash table: " << keysStored << endl;
+    return (float)keysStored / (float)T; // load factor = n / T
 }
 
-int createKey(string s1, string s2) {
-    int i1 = stoi(s1);
-    int i2 = stoi(s2);
-
-    return i1 * i2;
-}
-
-int hashByDivision(int key, int T) {
+long hashByDivision(long key, long T) {
     return key % T;
 }
 
-int hashByMultiplication(int key, int T) {
+long hashByMultiplication(long key, long T) {
     float k = (float)key;
     float t = (float)T;
     float A = 0.6180339887;
 
-    int result = floor(t * (fmod(k * A, 1)));
+    long result = floor(t * (fmod((k * A), 1)));
 
     return result;
 }
 
-vector<vector<string> > createHashTable(vector<vector<string> > data) {
-    data.erase(data.begin()); // delete header row
+vector<vector<string> > createHashTableByDiv(vector<vector<string> > data) {
+    vector<vector<string> > table;
+    long tableSize = data.size() * 2; // T = n * 2
+    table.resize(tableSize);
+    long key;
+    long rowToInsert;
+    int j;
+    int collisions = 0;
 
-    return data;
+    for (size_t i = 0; i < data.size(); i++)
+    {
+        key = stol(data[i][37]); // key at position 37 in each row, convert to long
+        rowToInsert = hashByDivision(key, tableSize);
+
+        if (table[rowToInsert].empty()) {
+            table[rowToInsert] = data[i];
+        }
+        else {
+            while (!table[rowToInsert].empty()) {
+                if (rowToInsert >= tableSize) { // if we're at last element in table, roll over to 0
+                    rowToInsert = 0;
+                }
+                else {
+                    rowToInsert++; // else increment row until we find empty slot
+                }
+            }
+            table[rowToInsert] = data[i]; // collision resolution by linear probing
+            collisions++;
+        }
+    }
+
+    cout << "Collisions while hashing by division: " << collisions << endl;
+    cout << "Table size: " << table.size() << endl;
+    cout << "Load factor while hashing by division: " << loadFactor(table) << endl;
+
+    return table;
 }
+
+vector<vector<string> > createHashTableByMult(vector<vector<string> > data) {
+    vector<vector<string> > table;
+    long tableSize = data.size() * 2; // T = n * 2
+    table.resize(tableSize);
+    long key;
+    long rowToInsert;
+    int j;
+    int collisions = 0;
+
+    for (size_t i = 0; i < data.size(); i++)
+    {
+        key = stol(data[i][37]); // key at position 37 in each row, convert to long
+        rowToInsert = hashByMultiplication(key, tableSize);
+
+        if (table[rowToInsert].empty()) {
+            table[rowToInsert] = data[i];
+        }
+        else {
+            while (!table[rowToInsert].empty()) {
+                if (rowToInsert >= tableSize) { // if we're at last element in table, roll over to 0
+                    rowToInsert = 0;
+                }
+                else {
+                    rowToInsert++; // else increment row until we find empty slot
+                }
+            }
+            table[rowToInsert] = data[i]; // collision resolution by linear probing
+            collisions++;
+        }
+    }
+
+    cout << "Collisions while hashing by multiplication: " << collisions << endl;
+    cout << "Table size: " << table.size() << endl;
+    cout << "Load factor while hashing by multiplication: " << loadFactor(table) << endl;
+
+    return table;
+}
+
+
 
 int main() {
 
     vector<vector<string> > data = read_csv("acs2015_county_data.csv");
 
-    cout << data.size() << "\n";
-    cout << data[0].size() << "\n";
-    cout << data[0][0].size() << "\n";
-    cout << data[0][36] << endl;
-    //cout << data[1][0]; // index out of bounds error
-
-    //printLine(0, data);
-    //printLine(1, data);
-
-    //data = createHashTable(data);
-    //cout << data.at(0).size() << "\n";
-    //printLine(0, data);
-    //printLine(1, data);
+    vector<vector<string> > hashTableD = createHashTableByDiv(data);
+    cout << endl;
+    vector<vector<string> > hashTableM = createHashTableByMult(data);
 
     return 0;
 }
 
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
+/*
 
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
+Outputs:
+
+Collisions while hashing by division: 1362
+Table size: 6440
+Elements stored in hash table: 3220
+Load factor while hashing by division: 0.5
+
+Collisions while hashing by multiplication: 3139
+Table size: 6440
+Elements stored in hash table: 3220
+Load factor while hashing by multiplication: 0.5
+
+
+
+*/
