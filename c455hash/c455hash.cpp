@@ -9,7 +9,7 @@
 #include <sstream> 
 using namespace std;
 
-long createKey(string s1, string s2) {
+long createKeyForDiv(string s1, string s2) {
     long i1 = 0;
     long i2 = 0;
 
@@ -23,7 +23,24 @@ long createKey(string s1, string s2) {
         i2 += s2[i];
     }
 
-    return i1 * i2;
+    return i1 * i2; // using multiplication here gave me less collisions when using division hashing function
+}
+
+long createKeyForMult(string s1, string s2) {
+    long i1 = 0;
+    long i2 = 0;
+
+    for (size_t i = 0; s1[i] != '\0'; i++)
+    {
+        i1 += s1[i];
+    }
+
+    for (size_t i = 0; s2[i] != '\0'; i++)
+    {
+        i2 += s2[i];
+    }
+
+    return (i1 + i2) * 31; // multiplying by a prime number here gave me less collisions when using multiplication hashing function
 }
 
 vector<vector<string> > read_csv(string inputFileName) {
@@ -50,7 +67,7 @@ vector<vector<string> > read_csv(string inputFileName) {
         while (getline(ss, field, ','))  // break line into comma delimitted fields
         {
             // use second and third columns to create key (state and county)
-            if (i == 1) {
+            if (i == 0) {
                 temp1 = field;
             }
             else if (i == 2) {
@@ -59,8 +76,10 @@ vector<vector<string> > read_csv(string inputFileName) {
             i++;
             row.push_back(field);  // add each field to the 1D array
         }
-        long key = createKey(temp1, temp2);
-        row.push_back(to_string(key)); // push key to position 37 of each row
+        long keyDiv = createKeyForDiv(temp1, temp2);
+        row.push_back(to_string(keyDiv)); // push division key to position 37 of each row
+        long keyMult = createKeyForMult(temp1, temp2);
+        row.push_back(to_string(keyMult)); // push multiplication key to position 38 of each row
 
         data.push_back(row);  // add the 1D array to the 2D array
     }
@@ -98,7 +117,7 @@ long hashByMultiplication(long key, long T) {
 
 vector<vector<string> > createHashTableByDiv(vector<vector<string> > data) {
     vector<vector<string> > table;
-    long tableSize = data.size() * 2; // T = n * 2
+    long tableSize = data.size() * 7; // T = n * 2
     table.resize(tableSize);
     long key;
     long rowToInsert;
@@ -136,7 +155,7 @@ vector<vector<string> > createHashTableByDiv(vector<vector<string> > data) {
 
 vector<vector<string> > createHashTableByMult(vector<vector<string> > data) {
     vector<vector<string> > table;
-    long tableSize = data.size() * 2; // T = n * 2
+    long tableSize = data.size() * 3; // T = n * 2
     table.resize(tableSize);
     long key;
     long rowToInsert;
@@ -145,7 +164,7 @@ vector<vector<string> > createHashTableByMult(vector<vector<string> > data) {
 
     for (size_t i = 0; i < data.size(); i++)
     {
-        key = stol(data[i][37]); // key at position 37 in each row, convert to long
+        key = stol(data[i][38]); // key at position 38 in each row, convert to long
         rowToInsert = hashByMultiplication(key, tableSize);
 
         if (table[rowToInsert].empty()) {
@@ -189,16 +208,25 @@ int main() {
 
 Outputs:
 
-Collisions while hashing by division: 1362
-Table size: 6440
+///////////////////////////////////////////////////////
+
+Collisions while hashing by division: 885
+Table size: 22540
 Elements stored in hash table: 3220
-Load factor while hashing by division: 0.5
+Load factor while hashing by division: 0.142857
 
-Collisions while hashing by multiplication: 3139
-Table size: 6440
+Collisions while hashing by multiplication: 2647
+Table size: 9660
 Elements stored in hash table: 3220
-Load factor while hashing by multiplication: 0.5
+Load factor while hashing by multiplication: 0.333333
 
+///////////////////////////////////////////////////////
 
+Using the collision resolution strategy of linear probing gave me mixed results on the hashing functions of division and multiplication. 
+Creating the key using the 'state' and 'county' columns and multiplying them together gave me less collisions with the division method,
+and adding them together then multiplying by a prime number gave me less collisions with multiplication hashing. Increasing the table 
+size (thereby reducing the load factor) helped reduce collisions in both methods, but in multiplication I found diminishing returns after
+increasing table size T above 3, and in division I found diminishing returns after increasing it above 7. In all the multiplication method
+produced significantly more collisions with this input.
 
 */
